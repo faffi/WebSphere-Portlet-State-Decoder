@@ -48,8 +48,10 @@ class WebSphereXMLStateTab(IMessageEditorTab):
 	def isEnabled(self, content, isRequest):
 		if content and isRequest:
 			httpService = self._controller.getHttpService()
-			request = self._extender._helpers.analyzeRequest(self._controller.getHttpService(), content)
-			return '!ut' in request.getUrl().toString()
+			if httpService :
+				request = self._extender._helpers.analyzeRequest(self._controller.getHttpService(), content)
+				url = request.getUrl().toString()
+				return '!ut' in url
 		return False
 
 	def setMessage(self, content, isRequest):
@@ -62,10 +64,13 @@ class WebSphereXMLStateTab(IMessageEditorTab):
 				reqInfo = self._extender._helpers.analyzeRequest(self._controller.getHttpService(), content)
 				url = reqInfo.getUrl()
 				path = url.getPath()
-				cookie = [h for h in reqInfo.getHeaders() if h.startswith('Cookie:')]
+				cookie = [h for h in reqInfo.getHeaders() if h.startswith('Cookie:')]				
 				if '!ut' in path:
-					req = '%s://%s:%d/wps/mycontenthandler?uri=state:%s' % (
-						url.getProtocol(), url.getHost(), url.getPort(), urllib.quote(url.toString()))
+					if 'https' in url.getProtocol() :
+						req = '%s://%s/wps/contenthandler?uri=state:%s' % (url.getProtocol(), url.getHost(), urllib.quote(url.toString()))					
+					else :
+						req = '%s://%s:%d/wps/contenthandler?uri=state:%s' % (url.getProtocol(), url.getHost(), url.getPort(), urllib.quote(url.toString()))
+										
 					opener = urllib2.build_opener()
 					if cookie:
 						opener.addheaders.append(('Cookie', cookie[0].split(': ')[1]))
